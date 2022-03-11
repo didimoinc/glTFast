@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Using correct file API for reading bytes in `EditorDownloadProvider` (thanks [@hybridherbst][hybridherbst] for #360)
 - GUID conflict with UnityGLTF
+- Not conflicting with alternative glTF importers anymore (#352)
 
 ## [4.6.0] - 2022-02-23
 ### Added

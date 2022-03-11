@@ -30,7 +30,11 @@ using Object = UnityEngine.Object;
 
 namespace GLTFast.Editor {
 
-    [ScriptedImporter(1,new [] {"gltf","glb"})] 
+#if UNITY_2020_2_OR_NEWER
+    [ScriptedImporter(1, null, overrideExts: new[] {"gltf","glb"})]
+#else
+    [ScriptedImporter(1,new [] {"gltf","glb"})]
+#endif
     public class GltfImporter : ScriptedImporter {
 
         [SerializeField]
