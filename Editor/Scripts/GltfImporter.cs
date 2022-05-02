@@ -106,6 +106,8 @@ namespace GLTFast.Editor {
                     animationMethod = ImportSettings.AnimationMethod.Mecanim,
                 };
             }
+			
+			importSettings.isProjectAsset = true;
             
             var success = AsyncHelpers.RunSync<bool>(() => m_Gltf.Load(ctx.assetPath,importSettings));
 

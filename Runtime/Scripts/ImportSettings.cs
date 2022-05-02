@@ -22,6 +22,11 @@ namespace GLTFast {
     [Serializable]
     public class ImportSettings {
         
+		/// <summary>
+        /// Is the glTF asset within the Unity project
+        /// </summary>
+        public bool isProjectAsset;
+		
         /// <summary>
         /// Defines how node names are created
         /// </summary>

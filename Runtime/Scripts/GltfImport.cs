@@ -962,7 +962,24 @@ namespace GLTFast {
             return true;
         }
 
-        async Task<bool> WaitForTextureDownloads() {
+        // private bool FileIsWithinProject(string path)
+        // {
+        //     List<string>            rootPaths               = new List<string> {"Assets/", "Packages/", "Library/PackageCache/"};
+        //     string pathFormatted = path.Replace("\\", "/");
+        //     foreach (string rootPath in rootPaths)
+        //     {
+        //         string rootPathAbsl = System.IO.Path.GetFullPath(rootPath).Replace("\\", "/");
+        //         if (pathFormatted.StartsWith(rootPathAbsl))
+        //         {
+        //             return true;
+        //         }
+        //     }
+        //
+        //     return false;
+        // }
+
+        async Task<bool> WaitForTextureDownloads()
+        {
             foreach( var dl in textureDownloadTasks ) {
                 var www = await dl.Value;
                 
@@ -972,14 +989,29 @@ namespace GLTFast {
                     Texture2D txt;
                     // TODO: Loading Jpeg/PNG textures like this creates major frame stalls. Main thread is waiting
                     // on Render thread, which is occupied by Gfx.UploadTextureData for 19 ms for a 2k by 2k texture
-                    if(forceSampleLinear || settings.generateMipMaps) {
+                    if(!settings.isProjectAsset && (forceSampleLinear || settings.generateMipMaps)) {
                         txt = CreateEmptyTexture(gltfRoot.images[imageIndex], imageIndex, forceSampleLinear);
                         // TODO: Investigate for NativeArray variant to avoid `www.data`
                         txt.LoadImage(www.data,!imageReadable[imageIndex]);
                     } else {
+                        
                         txt = www.texture;
                         txt.name = GetImageName(gltfRoot.images[imageIndex], imageIndex);
                     }
+
+                    #if UNITY_EDITOR
+                    if (settings.isProjectAsset)
+                    {
+                        string texturePath = UnityEditor.AssetDatabase.GetAssetPath(txt);
+                        if(texturePath != null) {
+                            UnityEditor.TextureImporter textureImporter = UnityEditor.AssetImporter.GetAtPath(texturePath) as UnityEditor.TextureImporter;
+                            textureImporter!.sRGBTexture = !forceSampleLinear;
+                            // textureImporter!.textureType = normalMap ? TextureImporterType.NormalMap : TextureImporterType.Default;
+                            // Only save the importer at the end, to prevent errors of loading this texture again after calling import
+                        }
+                    }
+                    #endif
+                    
                     images[imageIndex] = txt;
                     await deferAgent.BreakPoint();
                 } else {
