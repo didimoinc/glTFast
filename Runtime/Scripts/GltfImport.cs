@@ -172,8 +172,9 @@ namespace GLTFast {
         Texture2D[] textures;
         
         ImageFormat[] imageFormats;
-        bool[] imageReadable;
-        bool[] imageGamma;
+        bool[]        imageReadable;
+        bool[]        imageGamma;
+        bool[]        imageNormalMap;
 
         /// optional glTF-binary buffer
         /// https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#binary-buffer
@@ -796,7 +797,25 @@ namespace GLTFast {
                 
                 images = new Texture2D[gltfRoot.images.Length];
                 imageFormats = new ImageFormat[gltfRoot.images.Length];
+                
+                if(settings.isProjectAsset){
+                    
+                    imageNormalMap = new bool[gltfRoot.images.Length];
 
+                    for (int i = 0; i < gltfRoot.materials.Length; i++)
+                    {
+                        var mat = gltfRoot.materials[i];
+                        if(
+                            mat.normalTexture != null &&
+                            mat.normalTexture.index >= 0 &&
+                            mat.normalTexture.index < gltfRoot.textures.Length
+                        ) {
+                            var imageIndex = gltfRoot.textures[mat.normalTexture.index].GetImageIndex();
+                            imageNormalMap[imageIndex] = true;
+                        }
+                    }
+                }
+                
                 if(QualitySettings.activeColorSpace==ColorSpace.Linear) {
 
                     imageGamma = new bool[gltfRoot.images.Length];
@@ -986,6 +1005,7 @@ namespace GLTFast {
                 if(www.success) {
                     var imageIndex = dl.Key;
                     bool forceSampleLinear = imageGamma!=null && !imageGamma[imageIndex];
+                    bool isNormalMap = imageNormalMap!=null && imageNormalMap[imageIndex];
                     Texture2D txt;
                     // TODO: Loading Jpeg/PNG textures like this creates major frame stalls. Main thread is waiting
                     // on Render thread, which is occupied by Gfx.UploadTextureData for 19 ms for a 2k by 2k texture
@@ -1006,8 +1026,7 @@ namespace GLTFast {
                         if(texturePath != null) {
                             UnityEditor.TextureImporter textureImporter = UnityEditor.AssetImporter.GetAtPath(texturePath) as UnityEditor.TextureImporter;
                             textureImporter!.sRGBTexture = !forceSampleLinear;
-                            // textureImporter!.textureType = normalMap ? TextureImporterType.NormalMap : TextureImporterType.Default;
-                            // Only save the importer at the end, to prevent errors of loading this texture again after calling import
+                            textureImporter!.textureType = isNormalMap ? UnityEditor.TextureImporterType.NormalMap : UnityEditor.TextureImporterType.Default;
                         }
                     }
                     #endif
